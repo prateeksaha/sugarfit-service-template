@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/example")
@@ -16,14 +17,12 @@ public class ExampleController {
     private final ExampleService exampleService;
 
     @PostMapping
-    public ResponseEntity<ExampleResponse> process(
-            @Valid @RequestBody ExampleRequest request) {
+    public Mono<ResponseEntity<ExampleResponse>> process(
+            @Valid @RequestBody Mono<ExampleRequest> requestMono) {
 
-        String requestId = exampleService.processRequest();
-
-        ExampleResponse response =
-                new ExampleResponse("SUCCESS", requestId);
-
-        return ResponseEntity.ok(response);
+        return requestMono
+                .flatMap(request -> exampleService.processRequest())
+                .map(requestId -> new ExampleResponse("SUCCESS", requestId))
+                .map(ResponseEntity::ok);
     }
 }

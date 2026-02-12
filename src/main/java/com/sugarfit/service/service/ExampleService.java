@@ -1,14 +1,14 @@
 package com.sugarfit.service.service;
 
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 import java.util.UUID;
 
 @Service
 public class ExampleService {
 
-    public String processRequest() {
-        // In real world: business logic here
-        return UUID.randomUUID().toString();
+    public Mono<String> processRequest() {
+        return Mono.fromSupplier(() -> UUID.randomUUID().toString());
     }
 }

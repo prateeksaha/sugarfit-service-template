@@ -1,35 +1,30 @@
 package com.sugarfit.service.config;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
-import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.WebFilter;
+import org.springframework.web.server.WebFilterChain;
+import reactor.core.publisher.Mono;
 
-import java.io.IOException;
 import java.util.UUID;
 
 @Component
-public class RequestLoggingFilter extends OncePerRequestFilter {
+public class RequestLoggingFilter implements WebFilter {
 
     private static final String CORRELATION_ID = "correlationId";
+    private static final String HEADER_NAME = "X-Correlation-Id";
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
-            throws ServletException, IOException {
+    public Mono<Void> filter(ServerWebExchange exchange,
+                             WebFilterChain chain) {
 
         String correlationId = UUID.randomUUID().toString();
-        MDC.put(CORRELATION_ID, correlationId);
 
-        try {
-            response.setHeader("X-Correlation-Id", correlationId);
-            filterChain.doFilter(request, response);
-        } finally {
-            MDC.clear();
-        }
+        exchange.getResponse()
+                .getHeaders()
+                .add(HEADER_NAME, correlationId);
+
+        return chain.filter(exchange)
+                .contextWrite(ctx -> ctx.put(CORRELATION_ID, correlationId));
     }
 }
