@@ -18,10 +18,9 @@ public class ExampleController {
 
     @PostMapping
     public Mono<ResponseEntity<ExampleResponse>> process(
-            @Valid @RequestBody Mono<ExampleRequest> requestMono) {
+            @Valid @RequestBody ExampleRequest request) {
 
-        return requestMono
-                .flatMap(request -> exampleService.processRequest())
+        return exampleService.processRequest()
                 .map(requestId -> new ExampleResponse("SUCCESS", requestId))
                 .map(ResponseEntity::ok);
     }
